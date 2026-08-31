@@ -3,13 +3,14 @@ import { Link, Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
 import { useAccounts } from "./hooks/useAccounts";
 import { useTheme } from "./hooks/useTheme";
-import { Header } from "./components/Header";
+import { Sidebar } from "./components/Sidebar";
 import { AuthModal } from "./components/AuthModal";
 import { GroupSection } from "./components/GroupSection";
 import { ChangeChip } from "./components/ChangeChip";
 import { Landing } from "./components/Landing";
 import BillTracker from "./components/BillTracker.jsx";
 import GoalsTracker from "./components/GoalsTracker";
+import LettersTracker from "./components/LettersTracker";
 import { GROUPS, GROUP_COLORS } from "./types";
 import { formatCurrency, getCurrentBalance, pct } from "./lib/debt";
 
@@ -241,7 +242,7 @@ function NotFound() {
   return (
     <div
       style={{
-        minHeight: "calc(100vh - 61px)",
+        minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -304,12 +305,12 @@ function App() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: colors.bg }}>
+    <div className="flex flex-col md:flex-row" style={{ minHeight: "100vh", background: colors.bg }}>
       <a href="#main-content" className="skip-link">
         Skip to content
       </a>
-      <Header session={session} onLogin={() => setAuthModal("signin")} onSignup={() => setAuthModal("signup")} />
-      <main id="main-content">
+      <Sidebar session={session} onLogin={() => setAuthModal("signin")} onSignup={() => setAuthModal("signup")} />
+      <main id="main-content" className="flex-1" style={{ minWidth: 0 }}>
         <Routes>
           <Route
             path="/"
@@ -319,6 +320,7 @@ function App() {
           />
           <Route path="/bills" element={session ? <BillTracker /> : <Navigate to="/" replace />} />
           <Route path="/goals" element={session ? <GoalsTracker /> : <Navigate to="/" replace />} />
+          <Route path="/letters" element={session ? <LettersTracker /> : <Navigate to="/" replace />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

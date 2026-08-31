@@ -11,8 +11,14 @@ everything stays in sync across every device. Three modules, one login:
   (e.g. "Autopay from Checking").
 - **Goals** — seven life-area boxes (Faith, Family, Friends, Finances,
   Fitness, Fun, Future) for plain-text goals that reset fresh every month.
+- **Letters** — a private space for writing letters back and forth with one
+  other specific person. Unlike the other three modules, this one is **not**
+  private-per-account — it's locked to a hardcoded two-email allowlist (see
+  below), since signup itself is open to anyone.
 
-Light/dark theme toggle in the header, applied everywhere.
+Full-height left sidebar (collapses to a top bar + slide-in drawer below
+768px) with navigation, light/dark theme toggle, and account controls —
+applied everywhere, including the logged-out landing page.
 
 ## 1. Create a Supabase project
 
@@ -27,9 +33,13 @@ Light/dark theme toggle in the header, applied everywhere.
      `bill_tracker` table for the Bills module.
    - [`supabase/goals_tracker_schema.sql`](supabase/goals_tracker_schema.sql)
      — `goals_tracker` table for the Goals module.
+   - [`supabase/letters_schema.sql`](supabase/letters_schema.sql) — `letters`
+     table for the Letters module. **Different access model** — see below.
 
-   All three scope every row to the signed-in user via row-level security, so
-   nobody can ever see another user's data.
+   The first three scope every row to the signed-in user via row-level
+   security, so nobody can ever see another user's data. `letters` is the
+   exception: it's shared between exactly two hardcoded email addresses (see
+   "Letters access" below), not the general-purpose per-user model.
 3. Open **Project Settings → Data API**. Copy the **Project URL** and the
    **anon public** key — you'll need both in step 3 below.
 
@@ -51,6 +61,23 @@ accounts (each isolated to their own private data). If you want to restrict
 who can sign up at all (e.g. only people you invite), that needs to be
 configured in Supabase (disable public signups and invite users manually
 instead) — not something the current app UI does.
+
+### Letters access
+
+The Letters module is restricted to two specific email addresses, hardcoded
+in two places that must stay in sync:
+
+- `LETTERS_ALLOWED_EMAILS` in [`src/lib/lettersAccess.ts`](src/lib/lettersAccess.ts)
+  — controls whether the "Letters" nav link even appears, and the client-side
+  "not available" fallback.
+- The `auth.jwt() ->> 'email'` checks in
+  [`supabase/letters_schema.sql`](supabase/letters_schema.sql)'s row-level
+  security policies — the actual enforcement. Anyone else who signs up to the
+  app cannot read or write `letters` rows even if they navigate straight to
+  `/letters`.
+
+To change who has access (e.g. swap in a different email), update both
+places and re-run the policy statements in the SQL editor.
 
 ## 3. Configure and run the app
 
@@ -89,22 +116,28 @@ publicly — it only allows what the row-level security policies in
   per-month paid/cleared status, and per-month freeform notes.
 - **`goals_tracker`** — one row per user, a single JSON blob holding each
   month's goals grouped by category. Goals don't carry over between months.
-- Every row is scoped to the signed-in user via Postgres row-level security
-  (`auth.uid()`). The Debts tables also have Supabase Realtime enabled, so
-  balance/account changes push live to every open device without a manual
-  refresh (Bills and Goals sync on next load/save rather than live-push).
+- **`letters`** — one row per letter (author, email, body, timestamp).
+  Readable by both allowed accounts; each person can only insert/delete their
+  own rows. See "Letters access" above.
+- Every row in the first three tables is scoped to the signed-in user via
+  Postgres row-level security (`auth.uid()`); `letters` is scoped to the
+  two-email allowlist instead. The Debts and Letters tables have Supabase
+  Realtime enabled, so changes push live to every open device without a
+  manual refresh (Bills and Goals sync on next load/save rather than
+  live-push).
 
 ## Project structure
 
 ```
 src/
-  components/   Header, AuthModal (sign in/up), CardPanel + GroupSection + ChangeChip + ProgressBar (Debts),
-                BillTracker (Bills), GoalsTracker (Goals)
+  components/   Sidebar, AuthModal (sign in/up), CardPanel + GroupSection + ChangeChip + ProgressBar (Debts),
+                BillTracker (Bills), GoalsTracker (Goals), LettersTracker (Letters)
   hooks/        useAuth (session), useAccounts (Debts data + realtime sync), useTheme (light/dark palette)
-  lib/          supabaseClient, debt math helpers (formatCurrency, pct, etc.)
+  lib/          supabaseClient, debt math helpers (formatCurrency, pct, etc.), lettersAccess (Letters allowlist)
   types.ts      Account/BalanceEntry/Group types + GROUP_COLORS
 supabase/
   schema.sql               Debts: accounts + balance_entries, RLS, realtime
   bill_tracker_schema.sql  Bills: bill_tracker table + RLS
   goals_tracker_schema.sql Goals: goals_tracker table + RLS
+  letters_schema.sql       Letters: letters table + allowlist RLS + realtime
 ```
