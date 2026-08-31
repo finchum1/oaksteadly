@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
@@ -55,6 +55,20 @@ export default function GoalsTracker() {
   const isCurrentMonth = year === today.getFullYear() && month === today.getMonth();
   const monthGoals = goalsByMonth[mk] ?? emptyMonthGoals();
 
+  // Shared with a partner account (see couple_sharing.sql): whichever row RLS
+  // lets us see belongs to whoever created it first, not necessarily the
+  // signed-in viewer, so we remember its real owner and keep writing to that
+  // same row instead of splitting into two separate rows.
+  const ownerIdRef = useRef<string | null>(null);
+
+  const loadData = useCallback(async () => {
+    const { data, error } = await supabase.from("goals_tracker").select("user_id, data").limit(1).maybeSingle();
+    if (!error && data) {
+      ownerIdRef.current = data.user_id;
+      setGoalsByMonth(data.data?.goalsByMonth ?? {});
+    }
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -66,14 +80,7 @@ export default function GoalsTracker() {
           if (!cancelled) setLoaded(true);
           return;
         }
-        const { data, error } = await supabase
-          .from("goals_tracker")
-          .select("data")
-          .eq("user_id", user.id)
-          .maybeSingle();
-        if (!cancelled && !error && data?.data) {
-          setGoalsByMonth(data.data.goalsByMonth ?? {});
-        }
+        await loadData();
       } catch {
         // no saved data yet
       } finally {
@@ -83,7 +90,18 @@ export default function GoalsTracker() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [loadData]);
+
+  // Cross-person sync: pick up a partner's edits without a manual reload.
+  useEffect(() => {
+    const channel = supabase
+      .channel("goals-tracker-sync")
+      .on("postgres_changes", { event: "*", schema: "public", table: "goals_tracker" }, () => loadData())
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [loadData]);
 
   async function persist(next: GoalsByMonth) {
     try {
@@ -94,12 +112,14 @@ export default function GoalsTracker() {
         setSaveError(true);
         return;
       }
+      const targetId = ownerIdRef.current ?? user.id;
       const { error } = await supabase
         .from("goals_tracker")
         .upsert(
-          { user_id: user.id, data: { goalsByMonth: next }, updated_at: new Date().toISOString() },
+          { user_id: targetId, data: { goalsByMonth: next }, updated_at: new Date().toISOString() },
           { onConflict: "user_id" }
         );
+      if (!error) ownerIdRef.current = targetId;
       setSaveError(!!error);
     } catch {
       setSaveError(true);

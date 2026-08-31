@@ -3,7 +3,7 @@ import type { FormEvent } from "react";
 import { Mail, Send, Trash2 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import { useTheme } from "../hooks/useTheme";
-import { LETTERS_PEOPLE, isLettersAllowed } from "../lib/lettersAccess";
+import { COUPLE_PEOPLE, isCoupleMember } from "../lib/coupleAccess";
 
 interface Letter {
   id: string;
@@ -15,7 +15,7 @@ interface Letter {
 
 function displayName(email: string, viewerEmail: string | null) {
   if (viewerEmail && email.toLowerCase() === viewerEmail.toLowerCase()) return "You";
-  return LETTERS_PEOPLE[email.toLowerCase()] ?? email;
+  return COUPLE_PEOPLE[email.toLowerCase()] ?? email;
 }
 
 function formatDate(iso: string) {
@@ -56,7 +56,7 @@ export default function LettersTracker() {
         setViewerEmail(user?.email ?? null);
         setViewerId(user?.id ?? null);
       }
-      if (isLettersAllowed(user?.email)) {
+      if (isCoupleMember(user?.email)) {
         await refresh();
       }
       if (!cancelled) setLoaded(true);
@@ -126,7 +126,7 @@ export default function LettersTracker() {
     );
   }
 
-  if (!isLettersAllowed(viewerEmail)) {
+  if (!isCoupleMember(viewerEmail)) {
     return (
       <div
         style={{

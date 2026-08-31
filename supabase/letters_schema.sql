@@ -1,13 +1,13 @@
 -- Letters module — Supabase schema
 -- Run this once in the Supabase SQL Editor (Project -> SQL Editor -> New query).
 --
--- Access model: UNLIKE every other module in this app, Letters is not
--- private-per-user. It's a shared space between exactly two accounts (a
--- couple), so both people can read every letter, but each person can only
--- write/delete their own. Since signup is open to anyone, access is locked
--- to a hardcoded email allowlist rather than "any signed-in user" — keep
--- this list in sync with LETTERS_ALLOWED_EMAILS in src/lib/lettersAccess.ts
--- if it ever changes.
+-- Access model: like the rest of the app since couple_sharing.sql, Letters
+-- is shared between exactly two accounts (a couple) rather than
+-- private-per-user — both people can read every letter, but each person can
+-- only write/delete their own. Since signup is open to anyone, access is
+-- locked to a hardcoded email allowlist rather than "any signed-in user" —
+-- keep this list in sync with COUPLE_EMAILS in src/lib/coupleAccess.ts and
+-- the allowlist in couple_sharing.sql if it ever changes.
 
 create table if not exists letters (
   id uuid primary key default gen_random_uuid(),

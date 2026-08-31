@@ -5,7 +5,7 @@ import { NavLink } from "react-router-dom";
 import { Mail, Menu, Moon, Receipt, Sun, Target, TrendingDown, X } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import { useTheme } from "../hooks/useTheme";
-import { isLettersAllowed } from "../lib/lettersAccess";
+import { isCoupleMember } from "../lib/coupleAccess";
 
 interface SidebarProps {
   session: Session | null;
@@ -22,7 +22,7 @@ const NAV_ITEMS = [
 export function Sidebar({ session, onLogin, onSignup }: SidebarProps) {
   const { mode, colors, toggleTheme } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const showLetters = isLettersAllowed(session?.user.email);
+  const showLetters = isCoupleMember(session?.user.email);
 
   const navLinkStyle = ({ isActive }: { isActive: boolean }) => ({
     display: "flex",

@@ -302,28 +302,39 @@ export default function BillTracker() {
   const [draftNotes, setDraftNotes] = useState('');
   const notesTextareaRef = useRef(null);
 
+  // Shared with a partner account (see couple_sharing.sql): whichever row RLS
+  // lets us see belongs to whoever created it first, not necessarily the
+  // signed-in viewer, so we remember its real owner and keep writing to that
+  // same row instead of splitting into two separate rows.
+  const ownerIdRef = useRef(null);
+
+  const loadData = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('bill_tracker')
+      .select('user_id, data')
+      .limit(1)
+      .maybeSingle();
+    if (!error && data) {
+      ownerIdRef.current = data.user_id;
+      const parsed = data.data || {};
+      setBills(parsed.bills || []);
+      setStatusesByMonth(parsed.statusesByMonth || {});
+      let nbm = parsed.notesByMonth || {};
+      if (parsed.notes && !parsed.notesByMonth) {
+        const legacyKey = monthKey(today.getFullYear(), today.getMonth());
+        nbm = { ...nbm, [legacyKey]: parsed.notes };
+      }
+      setNotesByMonth(nbm);
+    }
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) { if (!cancelled) setLoaded(true); return; }
-        const { data, error } = await supabase
-          .from('bill_tracker')
-          .select('data')
-          .eq('user_id', user.id)
-          .maybeSingle();
-        if (!cancelled && !error && data && data.data) {
-          const parsed = data.data;
-          setBills(parsed.bills || []);
-          setStatusesByMonth(parsed.statusesByMonth || {});
-          let nbm = parsed.notesByMonth || {};
-          if (parsed.notes && !parsed.notesByMonth) {
-            const legacyKey = monthKey(today.getFullYear(), today.getMonth());
-            nbm = { ...nbm, [legacyKey]: parsed.notes };
-          }
-          setNotesByMonth(nbm);
-        }
+        await loadData();
       } catch (e) {
         // no saved data yet
       } finally {
@@ -331,22 +342,33 @@ export default function BillTracker() {
       }
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [loadData]);
+
+  // Cross-person sync: pick up a partner's edits without a manual reload.
+  useEffect(() => {
+    const channel = supabase
+      .channel('bill-tracker-sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bill_tracker' }, () => loadData())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [loadData]);
 
   const persist = useCallback(async (nextBills, nextStatuses, nextNotesByMonth) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setSaveError(true); return; }
+      const targetId = ownerIdRef.current ?? user.id;
       const { error } = await supabase
         .from('bill_tracker')
         .upsert(
           {
-            user_id: user.id,
+            user_id: targetId,
             data: { bills: nextBills, statusesByMonth: nextStatuses, notesByMonth: nextNotesByMonth },
             updated_at: new Date().toISOString()
           },
           { onConflict: 'user_id' }
         );
+      if (!error) ownerIdRef.current = targetId;
       setSaveError(!!error);
     } catch (e) {
       setSaveError(true);
