@@ -4,6 +4,8 @@ import { useAuth } from "./hooks/useAuth";
 import { useAccounts } from "./hooks/useAccounts";
 import { useTheme } from "./hooks/useTheme";
 import { Sidebar } from "./components/Sidebar";
+import { BottomNav } from "./components/BottomNav";
+import { AccountPage } from "./components/AccountPage";
 import { AuthModal } from "./components/AuthModal";
 import { GroupSection } from "./components/GroupSection";
 import { ChangeChip } from "./components/ChangeChip";
@@ -310,7 +312,7 @@ function App() {
         Skip to content
       </a>
       <Sidebar session={session} onLogin={() => setAuthModal("signin")} onSignup={() => setAuthModal("signup")} />
-      <main id="main-content" className="flex-1" style={{ minWidth: 0 }}>
+      <main id="main-content" className={session ? "flex-1 pb-16 md:pb-0" : "flex-1"} style={{ minWidth: 0 }}>
         <Routes>
           <Route
             path="/"
@@ -321,9 +323,11 @@ function App() {
           <Route path="/bills" element={session ? <BillTracker /> : <Navigate to="/" replace />} />
           <Route path="/goals" element={session ? <GoalsTracker /> : <Navigate to="/" replace />} />
           <Route path="/letters" element={session ? <LettersTracker /> : <Navigate to="/" replace />} />
+          <Route path="/account" element={session ? <AccountPage session={session} /> : <Navigate to="/" replace />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
+      {session && <BottomNav session={session} />}
       {authModal && <AuthModal initialMode={authModal} onClose={() => setAuthModal(null)} />}
     </div>
   );

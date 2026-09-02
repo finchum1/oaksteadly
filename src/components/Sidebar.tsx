@@ -171,9 +171,9 @@ export function Sidebar({ session, onLogin, onSignup }: SidebarProps) {
 
   return (
     <>
-      {/* Mobile top bar — replaces the full-height sidebar below 768px */}
+      {/* Mobile top bar — logged-out only; logged-in mobile uses BottomNav instead */}
       <div
-        className="flex md:hidden"
+        className={session ? "hidden md:hidden" : "flex md:hidden"}
         style={{
           position: "sticky",
           top: 0,
