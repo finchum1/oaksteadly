@@ -316,6 +316,8 @@ export function CardPanel({ account, onUpdate, onDelete, onAddEntry, onDeleteEnt
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
+                      flexWrap: "wrap",
+                      rowGap: 4,
                       padding: "6px 10px",
                       background: colors.surface,
                       borderRadius: 8,

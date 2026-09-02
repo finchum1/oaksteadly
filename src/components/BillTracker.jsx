@@ -178,7 +178,7 @@ function BillNoteField({ bill, onUpdateNote }) {
     <button
       type="button"
       onClick={() => { setNoteDraft(bill.note || ''); setEditingNote(true); }}
-      className={bill.note ? '' : 'opacity-0 group-hover:opacity-100'}
+      className={bill.note ? '' : 'opacity-100 sm:opacity-0 sm:group-hover:opacity-100'}
       style={{
         display: 'block',
         marginTop: 3,
@@ -205,10 +205,10 @@ function ListRow({ bill, status, displayDay, overdue, dimmed, onTogglePaid, onTo
 
   return (
     <div className="group flex items-center" style={{ padding: '10px 0', borderBottom: `1px solid ${LINE}`, opacity: dimmed ? 0.55 : 1 }}>
-      <div style={{ width: 40, fontFamily: MONO, fontSize: '0.85rem', fontWeight: 500, color: overdue ? RUST : INK }}>
+      <div style={{ width: 30, flexShrink: 0, fontFamily: MONO, fontSize: '0.85rem', fontWeight: 500, color: overdue ? RUST : INK }}>
         {String(displayDay).padStart(2, '0')}
       </div>
-      <div style={{ flex: 1, fontSize: '0.95rem', paddingRight: 8, color: dimmed ? MUTED : INK, textDecoration: dimmed ? 'line-through' : 'none' }}>
+      <div style={{ flex: 1, minWidth: 0, fontSize: '0.95rem', paddingRight: 6, color: dimmed ? MUTED : INK, textDecoration: dimmed ? 'line-through' : 'none' }}>
         {bill.name}
         {bill.recurring === false && (
           <span style={{ fontSize: '0.65rem', color: MUTED, marginLeft: 8, fontFamily: MONO, border: `1px solid ${LINE}`, borderRadius: 4, padding: '1px 5px' }}>
@@ -218,18 +218,18 @@ function ListRow({ bill, status, displayDay, overdue, dimmed, onTogglePaid, onTo
         {overdue && !dimmed && <span style={{ fontSize: '0.7rem', color: RUST, marginLeft: 8, fontFamily: MONO }}>past due</span>}
         <BillNoteField bill={bill} onUpdateNote={onUpdateNote} />
       </div>
-      <div style={{ width: 90, textAlign: 'right', fontFamily: MONO, fontSize: '0.9rem', color: dimmed ? MUTED : INK }}>${fmt(bill.amount)}</div>
-      <div style={{ width: 30, marginLeft: 16, display: 'flex', justifyContent: 'center' }}>
+      <div style={{ width: 68, flexShrink: 0, textAlign: 'right', fontFamily: MONO, fontSize: '0.85rem', color: dimmed ? MUTED : INK }}>${fmt(bill.amount)}</div>
+      <div style={{ width: 26, flexShrink: 0, marginLeft: 8, display: 'flex', justifyContent: 'center' }}>
         <StampCheck checked={status.paid} color={AMBER} label={`Mark ${bill.name} as paid`} onClick={onTogglePaid} />
       </div>
-      <div style={{ width: 30, marginLeft: 8, display: 'flex', justifyContent: 'center' }}>
+      <div style={{ width: 26, flexShrink: 0, marginLeft: 4, display: 'flex', justifyContent: 'center' }}>
         <StampCheck checked={status.cleared} color={SAGE} label={`Mark ${bill.name} as cleared the bank`} onClick={onToggleCleared} />
       </div>
       <button
         onClick={onDelete}
         aria-label={`Delete ${bill.name}`}
-        className="opacity-0 group-hover:opacity-100"
-        style={{ width: 28, marginLeft: 20, border: 'none', background: 'transparent', color: MUTED, cursor: 'pointer', transition: 'opacity 0.15s' }}
+        className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+        style={{ width: 24, flexShrink: 0, marginLeft: 6, border: 'none', background: 'transparent', color: MUTED, cursor: 'pointer', transition: 'opacity 0.15s' }}
       >
         <Trash2 size={15} />
       </button>
@@ -757,12 +757,12 @@ export default function BillTracker() {
                             className="flex items-center"
                             style={{ fontFamily: MONO, fontSize: '0.7rem', color: MUTED, letterSpacing: '0.04em', borderBottom: `1px solid ${LINE}`, paddingBottom: 8, marginBottom: 4 }}
                           >
-                            <div style={{ width: 40 }}>DUE</div>
-                            <div style={{ flex: 1 }}>BILL</div>
-                            <div style={{ width: 90, textAlign: 'right' }}>AMOUNT</div>
-                            <div style={{ width: 30, textAlign: 'center', marginLeft: 16 }}>PAID</div>
-                            <div style={{ width: 30, textAlign: 'center', marginLeft: 8 }}>BANK</div>
-                            <div style={{ width: 28 }} />
+                            <div style={{ width: 30, flexShrink: 0 }}>DUE</div>
+                            <div style={{ flex: 1, minWidth: 0 }}>BILL</div>
+                            <div style={{ width: 68, flexShrink: 0, textAlign: 'right' }}>AMOUNT</div>
+                            <div style={{ width: 26, flexShrink: 0, textAlign: 'center', marginLeft: 8 }}>PAID</div>
+                            <div style={{ width: 26, flexShrink: 0, textAlign: 'center', marginLeft: 4 }}>BANK</div>
+                            <div style={{ width: 24, flexShrink: 0, marginLeft: 6 }} />
                           </div>
                           {activeBillsList.map((bill) => {
                             const status = monthStatuses[bill.id] || { paid: false, cleared: false };
@@ -1081,7 +1081,7 @@ export default function BillTracker() {
                       const overdue = !status.paid && dateObj.getTime() < todayZero.getTime();
                       return (
                         <div key={bill.id} className="flex items-center" style={{ padding: '6px 0', paddingLeft: 42 }}>
-                          <div style={{ flex: 1, fontSize: '0.9rem' }}>
+                          <div style={{ flex: 1, minWidth: 0, fontSize: '0.9rem' }}>
                             {bill.name}
                             {bill.recurring === false && (
                               <span style={{ fontSize: '0.65rem', color: MUTED, marginLeft: 8, fontFamily: MONO, border: `1px solid ${LINE}`, borderRadius: 4, padding: '1px 5px' }}>
@@ -1091,11 +1091,11 @@ export default function BillTracker() {
                             {overdue && <span style={{ fontSize: '0.68rem', color: RUST, marginLeft: 8, fontFamily: MONO }}>past due</span>}
                             <BillNoteField bill={bill} onUpdateNote={(note) => updateBillNote(bill.id, note)} />
                           </div>
-                          <div style={{ width: 80, textAlign: 'right', fontFamily: MONO, fontSize: '0.85rem' }}>${fmt(bill.amount)}</div>
-                          <div style={{ marginLeft: 12 }}>
+                          <div style={{ width: 68, flexShrink: 0, textAlign: 'right', fontFamily: MONO, fontSize: '0.85rem' }}>${fmt(bill.amount)}</div>
+                          <div style={{ marginLeft: 8, flexShrink: 0 }}>
                             <StampCheck checked={status.paid} color={AMBER} label={`Mark ${bill.name} as paid`} onClick={() => toggleStatus(bill.id, 'paid', y, m)} />
                           </div>
-                          <div style={{ marginLeft: 8 }}>
+                          <div style={{ marginLeft: 6, flexShrink: 0 }}>
                             <StampCheck checked={status.cleared} color={SAGE} label={`Mark ${bill.name} as cleared the bank`} onClick={() => toggleStatus(bill.id, 'cleared', y, m)} />
                           </div>
                         </div>

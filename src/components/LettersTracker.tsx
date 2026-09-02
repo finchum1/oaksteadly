@@ -189,7 +189,7 @@ export default function LettersTracker() {
                           <button
                             onClick={() => handleDelete(letter.id)}
                             aria-label="Delete letter"
-                            className="opacity-0 group-hover:opacity-70 transition-opacity duration-150 active:scale-90"
+                            className="opacity-100 sm:opacity-0 sm:group-hover:opacity-70 transition-opacity duration-150 active:scale-90"
                             style={{ background: "none", border: "none", color: "inherit", cursor: "pointer", display: "flex", padding: 0 }}
                           >
                             <Trash2 size={13} />

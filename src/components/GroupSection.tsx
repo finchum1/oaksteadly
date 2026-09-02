@@ -53,13 +53,15 @@ export function GroupSection({
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
+          flexWrap: "wrap",
+          rowGap: 6,
           cursor: "pointer",
           paddingBottom: 10,
           marginBottom: 14,
           borderBottom: `1px solid ${colors.border}`,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", rowGap: 4 }}>
           <span style={{ width: 8, height: 8, borderRadius: 99, background: color, display: "inline-block" }} />
           <h2 style={{ fontSize: 16, fontWeight: 800, color: colors.text, margin: 0, letterSpacing: "-0.01em" }}>
             {group}
@@ -68,7 +70,7 @@ export function GroupSection({
             {accounts.length} {accounts.length === 1 ? "account" : "accounts"}
           </span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", rowGap: 4 }}>
           {groupMonthly > 0 && (
             <span style={{ fontSize: 12, color: colors.textMuted }}>
               {formatCurrency(groupMonthly)}
