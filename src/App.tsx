@@ -12,7 +12,6 @@ import { ChangeChip } from "./components/ChangeChip";
 import { Landing } from "./components/Landing";
 import BillTracker from "./components/BillTracker.jsx";
 import GoalsTracker from "./components/GoalsTracker";
-import LettersTracker from "./components/LettersTracker";
 import { GROUPS, GROUP_COLORS } from "./types";
 import { formatCurrency, getCurrentBalance, pct } from "./lib/debt";
 
@@ -322,12 +321,11 @@ function App() {
           />
           <Route path="/bills" element={session ? <BillTracker /> : <Navigate to="/" replace />} />
           <Route path="/goals" element={session ? <GoalsTracker /> : <Navigate to="/" replace />} />
-          <Route path="/letters" element={session ? <LettersTracker /> : <Navigate to="/" replace />} />
           <Route path="/account" element={session ? <AccountPage session={session} /> : <Navigate to="/" replace />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
-      {session && <BottomNav session={session} />}
+      {session && <BottomNav />}
       {authModal && <AuthModal initialMode={authModal} onClose={() => setAuthModal(null)} />}
     </div>
   );

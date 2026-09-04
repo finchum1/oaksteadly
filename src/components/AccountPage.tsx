@@ -43,8 +43,8 @@ export function AccountPage({ session }: { session: Session }) {
             </div>
             <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>{partnerName}</div>
             <p style={{ fontSize: 13, color: colors.textMuted2, lineHeight: 1.5, margin: "0 0 10px" }}>
-              Debts, Bills, Goals, and Letters are shared between the two of you — either of you can edit
-              anything, and changes appear on the other's device in real time.
+              Debts, Bills, and Goals are shared between the two of you — either of you can edit anything,
+              and changes appear on the other's device in real time.
             </p>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <RefreshCw size={13} color={colors.green} />

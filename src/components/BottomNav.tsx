@@ -1,24 +1,16 @@
 import { NavLink } from "react-router-dom";
-import { CircleUser, Mail, Receipt, Target, TrendingDown } from "lucide-react";
+import { CircleUser, Receipt, Target, TrendingDown } from "lucide-react";
 import { useTheme } from "../hooks/useTheme";
-import { isCoupleMember } from "../lib/coupleAccess";
-import type { Session } from "@supabase/supabase-js";
 
 const NAV_ITEMS = [
   { to: "/", label: "Debts", icon: TrendingDown, end: true },
   { to: "/bills", label: "Bills", icon: Receipt, end: false },
   { to: "/goals", label: "Goals", icon: Target, end: false },
+  { to: "/account", label: "Account", icon: CircleUser, end: false },
 ];
 
-export function BottomNav({ session }: { session: Session }) {
+export function BottomNav() {
   const { colors } = useTheme();
-  const showLetters = isCoupleMember(session.user.email);
-
-  const items = [
-    ...NAV_ITEMS,
-    ...(showLetters ? [{ to: "/letters", label: "Letters", icon: Mail, end: false }] : []),
-    { to: "/account", label: "Account", icon: CircleUser, end: false },
-  ];
 
   return (
     <nav
@@ -38,7 +30,7 @@ export function BottomNav({ session }: { session: Session }) {
         paddingBottom: "max(6px, env(safe-area-inset-bottom))",
       }}
     >
-      {items.map(({ to, label, icon: Icon, end }) => (
+      {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
         <NavLink
           key={to}
           to={to}

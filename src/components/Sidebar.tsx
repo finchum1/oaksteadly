@@ -2,10 +2,9 @@ import { useState } from "react";
 import type { MouseEvent } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { NavLink } from "react-router-dom";
-import { Mail, Menu, Moon, Receipt, Sun, Target, TrendingDown, X } from "lucide-react";
+import { Menu, Moon, Receipt, Sun, Target, TrendingDown, X } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import { useTheme } from "../hooks/useTheme";
-import { isCoupleMember } from "../lib/coupleAccess";
 
 interface SidebarProps {
   session: Session | null;
@@ -22,7 +21,6 @@ const NAV_ITEMS = [
 export function Sidebar({ session, onLogin, onSignup }: SidebarProps) {
   const { mode, colors, toggleTheme } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const showLetters = isCoupleMember(session?.user.email);
 
   const navLinkStyle = ({ isActive }: { isActive: boolean }) => ({
     display: "flex",
@@ -86,18 +84,6 @@ export function Sidebar({ session, onLogin, onSignup }: SidebarProps) {
               {label}
             </NavLink>
           ))}
-          {showLetters && (
-            <NavLink
-              to="/letters"
-              style={navLinkStyle}
-              onMouseEnter={(e) => navLinkHover(e, true)}
-              onMouseLeave={(e) => navLinkHover(e, false)}
-              onClick={() => setMobileOpen(false)}
-            >
-              <Mail size={16} />
-              Letters
-            </NavLink>
-          )}
         </nav>
       )}
 

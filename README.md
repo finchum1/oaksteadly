@@ -11,18 +11,16 @@ everything stays in sync across every device. Three modules, one login:
   (e.g. "Autopay from Checking").
 - **Goals** — seven life-area boxes (Faith, Family, Friends, Finances,
   Fitness, Fun, Future) for plain-text goals that reset fresh every month.
-- **Letters** — a private space for writing letters back and forth with one
-  other specific person.
 
 Full-height left sidebar (collapses to a top bar + slide-in drawer below
-768px) with navigation, light/dark theme toggle, and account controls —
-applied everywhere, including the logged-out landing page.
+768px on the logged-out landing page, or a bottom icon nav once logged in)
+with navigation, light/dark theme toggle, and account controls.
 
 **Two accounts share and co-edit everything.** By default every module is
 private-per-account, but this app is configured for a couple: two hardcoded
-email addresses fully share and can edit each other's Debts, Bills, Goals,
-and Letters — an edit from either side shows up for the other without a
-manual refresh. Anyone else who signs up still gets the original
+email addresses fully share and can edit each other's Debts, Bills, and
+Goals — an edit from either side shows up for the other without a manual
+refresh. Anyone else who signs up still gets the original
 fully-private-per-user experience. See "Couple sharing" below.
 
 ## 1. Create a Supabase project
@@ -38,18 +36,22 @@ fully-private-per-user experience. See "Couple sharing" below.
      `bill_tracker` table for the Bills module.
    - [`supabase/goals_tracker_schema.sql`](supabase/goals_tracker_schema.sql)
      — `goals_tracker` table for the Goals module.
-   - [`supabase/letters_schema.sql`](supabase/letters_schema.sql) — `letters`
-     table for the Letters module.
    - [`supabase/couple_sharing.sql`](supabase/couple_sharing.sql) — run this
-     **last**, after all four tables above exist. Grants two hardcoded email
+     **last**, after all three tables above exist. Grants two hardcoded email
      addresses mutual read/write access to each other's Debts, Bills, and
-     Goals data (Letters is already shared by design). See "Couple sharing"
-     below.
+     Goals data. See "Couple sharing" below.
 
    Each table starts out scoped to the signed-in user via row-level security,
    so nobody can see another user's data — `couple_sharing.sql` then adds
    mutual access between exactly the two people you configure, on top of
    that, without removing the per-user protection for anyone else.
+
+   **Note on `supabase/letters_schema.sql`**: an earlier "Letters" module
+   used to live here. The module has been removed from the app, but that
+   schema file (and its `letters` table/data in your Supabase project) is
+   left alone deliberately — nothing in this app reads from it anymore, and
+   it's not part of this setup flow. Delete the table yourself in the
+   Supabase dashboard if you want it gone too.
 3. Open **Project Settings → Data API**. Copy the **Project URL** and the
    **anon public** key — you'll need both in step 3 below.
 
@@ -75,18 +77,15 @@ instead) — not something the current app UI does.
 ### Couple sharing
 
 Two specific email addresses share and co-edit everything — Debts, Bills,
-Goals, and Letters — instead of each getting their own siloed data. This is
-hardcoded in three places that must stay in sync:
+and Goals — instead of each getting their own siloed data. This is
+hardcoded in two places that must stay in sync:
 
 - `COUPLE_EMAILS` / `COUPLE_PEOPLE` in
-  [`src/lib/coupleAccess.ts`](src/lib/coupleAccess.ts) — controls whether the
-  "Letters" nav link appears, the Letters "not available" fallback, and how
-  each person's name is displayed in Letters.
+  [`src/lib/coupleAccess.ts`](src/lib/coupleAccess.ts) — controls the
+  "Shared with" info shown on the Account page.
 - The `auth.jwt() ->> 'email'` checks in
   [`supabase/couple_sharing.sql`](supabase/couple_sharing.sql)'s policies —
   the actual enforcement for Debts, Bills, and Goals.
-- The same checks in [`supabase/letters_schema.sql`](supabase/letters_schema.sql)
-  — enforcement for Letters.
 
 Anyone else who signs up to the app cannot see or write into either
 person's data, and still gets the original private-per-user experience for
@@ -103,7 +102,7 @@ every future save keeps writing to that same row, regardless of who's
 signed in. Debts needed no such change — `accounts` already supports many
 rows from different owners, so broadening the RLS policy alone was enough.
 
-To change who has access (e.g. swap in a different email), update all three
+To change who has access (e.g. swap in a different email), update both
 places above and re-run the policy statements in the SQL editor.
 
 ## 3. Configure and run the app
@@ -143,23 +142,21 @@ publicly — it only allows what the row-level security policies in
   per-month paid/cleared status, and per-month freeform notes.
 - **`goals_tracker`** — one row per user, a single JSON blob holding each
   month's goals grouped by category. Goals don't carry over between months.
-- **`letters`** — one row per letter (author, email, body, timestamp).
-  Readable by both allowed accounts; each person can only insert/delete their
-  own rows.
 - Every row starts out scoped to the signed-in user via Postgres row-level
   security (`auth.uid()`); `couple_sharing.sql` adds a second policy on
   `accounts`, `balance_entries`, `bill_tracker`, and `goals_tracker` granting
   the two allowed accounts mutual access on top of that (see "Couple sharing"
-  above), and `letters` is scoped to the same allowlist by design. All four
-  tables now have Supabase Realtime enabled, so an edit from either person
-  pushes live to the other's open device without a manual refresh.
+  above). All four tables have Supabase Realtime enabled, so an edit from
+  either person pushes live to the other's open device without a manual
+  refresh.
 
 ## Project structure
 
 ```
 src/
-  components/   Sidebar, AuthModal (sign in/up), CardPanel + GroupSection + ChangeChip + ProgressBar (Debts),
-                BillTracker (Bills), GoalsTracker (Goals), LettersTracker (Letters)
+  components/   Sidebar, BottomNav, AccountPage, AuthModal (sign in/up),
+                CardPanel + GroupSection + ChangeChip + ProgressBar (Debts),
+                BillTracker (Bills), GoalsTracker (Goals)
   hooks/        useAuth (session), useAccounts (Debts data + realtime sync), useTheme (light/dark palette)
   lib/          supabaseClient, debt math helpers (formatCurrency, pct, etc.), coupleAccess (shared-access allowlist)
   types.ts      Account/BalanceEntry/Group types + GROUP_COLORS
@@ -167,6 +164,6 @@ supabase/
   schema.sql               Debts: accounts + balance_entries, RLS, realtime
   bill_tracker_schema.sql  Bills: bill_tracker table + RLS
   goals_tracker_schema.sql Goals: goals_tracker table + RLS
-  letters_schema.sql       Letters: letters table + allowlist RLS + realtime
   couple_sharing.sql       Run last: shares Debts/Bills/Goals between the two allowed accounts
+  letters_schema.sql       No longer used by the app — see note in step 1
 ```
